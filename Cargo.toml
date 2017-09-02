@@ -1,0 +1,6 @@
+[package]
+name = "libsweep"
+version = "0.1.0"
+authors = ["pi"]
+
+[dependencies]
