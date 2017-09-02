@@ -46,6 +46,12 @@ struct Sweep {
   device: *const sweep_device
 }
 
+struct Scan {
+  angle: i32,
+  distance: i32,
+  signal_strength: i32
+}
+
 impl Sweep {
 
   fn new(path: String) -> Result<Self,String> {
@@ -59,6 +65,25 @@ impl Sweep {
     }
   }
 
+  fn scan(&mut self) -> Vec<Scan> {
+    let mut data = vec![];
+    let err : *mut sweep_error = std::ptr::null_mut();
+    unsafe {
+      let scan = sweep_device_get_scan(self.device, &err);
+      check(err).unwrap();
+      let sample_count = sweep_scan_get_number_of_samples(scan);
+      for i in 0..sample_count {
+        let index = i as usize;
+        let mut x = Scan { angle: 0, distance: 0, signal_strength: 0 };
+        x.angle = sweep_scan_get_angle(scan, i);
+        x.distance = sweep_scan_get_distance(scan, i);
+        x.signal_strength = sweep_scan_get_signal_strength(scan, i);
+        data.push(x);
+      }
+    }
+    data
+  }
+
 }
 
 #[cfg(test)]
@@ -68,7 +93,8 @@ mod tests {
 
     #[test]
     fn rust_calls_work() {
-      let sweep = Sweep::new(String::from("/dev/ttyUSB0")).unwrap();
+      let mut sweep = Sweep::new(String::from("/dev/ttyUSB0")).unwrap();
+      sweep.scan();
     }
 
     #[test]
