@@ -20,14 +20,14 @@ extern {
 }
 
 
-fn check(error: *mut sweep_error) {
-  if (error.is_null()) {
-    println!("No error");
+fn check(error: *mut sweep_error) -> Result<(), String> {
+  if error.is_null() {
+    //println!("No error");
+    Ok(())
   } else {
-    unsafe {
-      let error_string = sweep_error_message(error);
-      println!("Sweep error message: {:?}", CStr::from_ptr(error_string));
-    }
+    Err(unsafe {
+      format!("{:?}", CStr::from_ptr(sweep_error_message(error)))
+    })
   }
 }
 
@@ -50,12 +50,12 @@ mod tests {
         println!("sweep_get_version returned {:?}", v);
 
         println!("constructing device");
-        let device = sweep_device_construct_simple(CString::new("TBD").unwrap().as_ptr(), &err);
-        check(err);
+        let device = sweep_device_construct_simple(CString::new("/dev/ttyUSB0").unwrap().as_ptr(), &err);
+        check(err).unwrap();
 
         println!("start scanning");
         sweep_device_start_scanning(device, &err);
-        check(err);
+        check(err).unwrap();
 
 
         }
