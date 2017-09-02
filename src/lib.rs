@@ -42,13 +42,37 @@ fn check(error: *mut sweep_error) -> Result<(), String> {
   }
 }
 
+struct Sweep {
+  device: *const sweep_device
+}
+
+impl Sweep {
+
+  fn new(path: String) -> Result<Self,String> {
+    let err : *mut sweep_error = std::ptr::null_mut();
+    let device = unsafe { sweep_device_construct_simple(path.as_ptr(), &err) };
+    if err.is_null() {
+      Ok(Sweep { device: device })
+    } else {
+      let msg = format!("{:?}", unsafe { CStr::from_ptr(sweep_error_message(err)) } );
+      Err(msg)
+    }
+  }
+
+}
+
 #[cfg(test)]
 mod tests {
 
     use super::*;
 
     #[test]
-    fn it_works() {
+    fn rust_calls_work() {
+      let sweep = Sweep::new(String::from("/dev/ttyUSB0")).unwrap();
+    }
+
+    #[test]
+    fn ffi_calls_work() {
 
         unsafe {
 
