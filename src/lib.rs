@@ -42,6 +42,7 @@ fn check(error: *mut sweep_error) -> Result<(), String> {
   }
 }
 
+/*
 struct Sweep {
   device: *const sweep_device
 }
@@ -58,7 +59,13 @@ impl Sweep {
     let err : *mut sweep_error = std::ptr::null_mut();
     let device = unsafe { sweep_device_construct_simple(path.as_ptr(), &err) };
     if err.is_null() {
-      Ok(Sweep { device: device })
+      unsafe { sweep_device_start_scanning(device, &err) };
+      if err.is_null() {
+        Ok(Sweep { device: device })
+      } else {
+        let msg = format!("{:?}", unsafe { CStr::from_ptr(sweep_error_message(err)) } );
+        Err(msg)
+      }
     } else {
       let msg = format!("{:?}", unsafe { CStr::from_ptr(sweep_error_message(err)) } );
       Err(msg)
@@ -85,18 +92,22 @@ impl Sweep {
   }
 
 }
+*/
 
 #[cfg(test)]
 mod tests {
 
     use super::*;
-
+/*
     #[test]
     fn rust_calls_work() {
       let mut sweep = Sweep::new(String::from("/dev/ttyUSB0")).unwrap();
-      sweep.scan();
+      let data = sweep.scan();
+      for i in 0..data.len() {
+        println!("Angle {}, Distance {}, Signal Strength: {}", data[i].angle, data[i].distance, data[i].signal_strength);
+      }
     }
-
+*/
     #[test]
     fn ffi_calls_work() {
 
