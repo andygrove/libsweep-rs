@@ -5,94 +5,77 @@ use std::ffi::{CStr, CString};
 use std::os::raw::c_char;
 
 #[repr(C)]
-struct sweep_device;
+struct SweepDevice;
 
 #[repr(C)]
-struct sweep_error;
+struct SweepError;
 
 #[repr(C)]
-struct sweep_scan;
+struct SweepScan;
 
 #[link(name = "sweep")]
 extern {
-  fn sweep_error_message(error: *const sweep_error) -> *const c_char;
+  fn sweep_error_message(error: *const SweepError) -> *const c_char;
   fn sweep_is_abi_compatible() -> bool;
   fn sweep_get_version() -> int32_t;
-  fn sweep_device_construct_simple(port: *const c_char, error: *const *mut sweep_error) -> *const sweep_device;
-  fn sweep_device_start_scanning(device: *const sweep_device, error: *const *mut sweep_error);
-  fn sweep_device_stop_scanning(device: *const sweep_device, error: *const *mut sweep_error);
-  fn sweep_device_get_motor_speed(device: *const sweep_device, error: *const *mut sweep_error) -> int32_t;
-  fn sweep_device_get_sample_rate(device: *const sweep_device, error: *const *mut sweep_error) -> int32_t;
-  fn sweep_device_get_scan(device: *const sweep_device, error: *const *mut sweep_error) -> *const sweep_scan;
-  fn sweep_scan_get_number_of_samples(scan: *const sweep_scan) -> int32_t;
-  fn sweep_scan_get_angle(scan: *const sweep_scan, sample: int32_t) -> int32_t;
-  fn sweep_scan_get_distance(scan: *const sweep_scan, sample: int32_t) -> int32_t;
-  fn sweep_scan_get_signal_strength(scan: *const sweep_scan, sample: int32_t) -> int32_t;
+  fn sweep_device_construct_simple(port: *const c_char, error: *const *mut SweepError) -> *const SweepDevice;
+  fn sweep_device_start_scanning(device: *const SweepDevice, error: *const *mut SweepError);
+  fn sweep_device_stop_scanning(device: *const SweepDevice, error: *const *mut SweepError);
+  fn sweep_device_get_motor_speed(device: *const SweepDevice, error: *const *mut SweepError) -> int32_t;
+  fn sweep_device_get_sample_rate(device: *const SweepDevice, error: *const *mut SweepError) -> int32_t;
+  fn sweep_device_get_scan(device: *const SweepDevice, error: *const *mut SweepError) -> *const SweepScan;
+  fn sweep_scan_get_number_of_samples(scan: *const SweepScan) -> int32_t;
+  fn sweep_scan_get_angle(scan: *const SweepScan, sample: int32_t) -> int32_t;
+  fn sweep_scan_get_distance(scan: *const SweepScan, sample: int32_t) -> int32_t;
+  fn sweep_scan_get_signal_strength(scan: *const SweepScan, sample: int32_t) -> int32_t;
 }
 
-
-fn check(error: *mut sweep_error) -> Result<(), String> {
-  if error.is_null() {
-    //println!("No error");
-    Ok(())
-  } else {
-    Err(unsafe {
-      format!("{:?}", CStr::from_ptr(sweep_error_message(error)))
-    })
-  }
+fn get_error(err: *mut SweepError) -> String {
+    format!("{:?}", unsafe { CStr::from_ptr(sweep_error_message(err)) })
 }
 
-/*
-struct Sweep {
-  device: *const sweep_device
+fn check(error: *mut SweepError) -> Result<(), String> {
+    if error.is_null() {
+        //println!("No error");
+        Ok(())
+    } else {
+        Err(unsafe {
+            format!("{:?}", CStr::from_ptr(sweep_error_message(error)))
+        })
+    }
 }
 
-struct Scan {
-  angle: i32,
-  distance: i32,
-  signal_strength: i32
+pub struct Sweep {
+    device: *const SweepDevice
 }
 
 impl Sweep {
-
-  fn new(path: String) -> Result<Self,String> {
-    let err : *mut sweep_error = std::ptr::null_mut();
-    let device = unsafe { sweep_device_construct_simple(path.as_ptr(), &err) };
-    if err.is_null() {
-      unsafe { sweep_device_start_scanning(device, &err) };
-      if err.is_null() {
-        Ok(Sweep { device: device })
-      } else {
-        let msg = format!("{:?}", unsafe { CStr::from_ptr(sweep_error_message(err)) } );
-        Err(msg)
-      }
-    } else {
-      let msg = format!("{:?}", unsafe { CStr::from_ptr(sweep_error_message(err)) } );
-      Err(msg)
+    
+    pub fn new(device: String) -> Result<Self, String> {
+        unsafe {
+            let mut err : *mut SweepError = std::ptr::null_mut();
+            let device = sweep_device_construct_simple(CString::new(device).unwrap().as_ptr(), &err);
+            if err.is_null() {
+                Ok(Sweep { device: device })
+            } else {
+                Err(get_error(err))
+            }
+        }
     }
-  }
 
-  fn scan(&mut self) -> Vec<Scan> {
-    let mut data = vec![];
-    let err : *mut sweep_error = std::ptr::null_mut();
-    unsafe {
-      let scan = sweep_device_get_scan(self.device, &err);
-      check(err).unwrap();
-      let sample_count = sweep_scan_get_number_of_samples(scan);
-      for i in 0..sample_count {
-        let index = i as usize;
-        let mut x = Scan { angle: 0, distance: 0, signal_strength: 0 };
-        x.angle = sweep_scan_get_angle(scan, i);
-        x.distance = sweep_scan_get_distance(scan, i);
-        x.signal_strength = sweep_scan_get_signal_strength(scan, i);
-        data.push(x);
-      }
+    pub fn start_scanning(&self) -> Result<(), String> {
+        unsafe {
+            let mut err : *mut SweepError = std::ptr::null_mut();
+            sweep_device_start_scanning(self.device, &err);
+            if err.is_null() {
+                Ok(())
+            } else {
+                Err(get_error(err))
+            }
+        }
     }
-    data
-  }
-
 }
-*/
+
 
 #[cfg(test)]
 mod tests {
@@ -113,7 +96,7 @@ mod tests {
 
         unsafe {
 
-        let mut err : *mut sweep_error = std::ptr::null_mut();
+        let mut err : *mut SweepError = std::ptr::null_mut();
 
         let c = sweep_is_abi_compatible();
         println!("sweep_is_abi_compatible returned {:?}", c);
@@ -122,7 +105,8 @@ mod tests {
         println!("sweep_get_version returned {:?}", v);
 
         println!("constructing device");
-        let device = sweep_device_construct_simple(CString::new("/dev/ttyUSB0").unwrap().as_ptr(), &err);
+
+
         check(err).unwrap();
 
         println!("Motor speed: {}", sweep_device_get_motor_speed(device, &err));
