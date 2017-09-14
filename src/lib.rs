@@ -34,24 +34,14 @@ fn get_error(err: *mut SweepError) -> String {
     format!("{:?}", unsafe { CStr::from_ptr(sweep_error_message(err)) })
 }
 
-fn check(error: *mut SweepError) -> Result<(), String> {
-    if error.is_null() {
-        Ok(())
-    } else {
-        Err(unsafe {
-            format!("{:?}", CStr::from_ptr(sweep_error_message(error)))
-        })
-    }
-}
-
 pub struct Sweep {
     device: *const SweepDevice
 }
 
 pub struct Point {
-    angle: i32,
-    distance: i32,
-    signal_strength: i32
+    pub angle: i32,
+    pub distance: i32,
+    pub signal_strength: i32
 }
 
 impl Sweep {
@@ -105,7 +95,6 @@ impl Sweep {
                     let angle = sweep_scan_get_angle(scan, n);
                     let distance = sweep_scan_get_distance(scan, n);
                     let signal_strength = sweep_scan_get_signal_strength(scan, n);
-                    //println!("Angle {}, Distance {}, Signal Strength: {}", angle, distance, signal_strength);
                     points.push(Point { angle: angle, distance: distance, signal_strength: signal_strength });
                 }
 
@@ -127,53 +116,57 @@ mod tests {
     fn rust_calls_work() {
         let mut sweep = Sweep::new(String::from("/dev/ttyUSB0")).unwrap();
         sweep.start_scanning().unwrap();
-        sweep.scan().unwrap();
+        let points = sweep.scan().unwrap();
+        for point in &points {
+            println!("Angle {}, Distance {}, Signal Strength: {}",
+                     point.angle, point.distance, point.signal_strength);
+        }
         sweep.stop_scanning().unwrap();
     }
 
-    #[test]
-    fn ffi_calls_work() {
-
-        unsafe {
-
-        let err : *mut SweepError = std::ptr::null_mut();
-
-        let c = sweep_is_abi_compatible();
-        println!("sweep_is_abi_compatible returned {:?}", c);
-
-        let v = sweep_get_version();
-        println!("sweep_get_version returned {:?}", v);
-
-        println!("constructing device");
-        let device = sweep_device_construct_simple(CString::new("/dev/ttyUSB0").unwrap().as_ptr(), &err);
-        check(err).unwrap();
-
-        println!("Motor speed: {}", sweep_device_get_motor_speed(device, &err));
-        check(err).unwrap();
-
-        println!("Sample rate: {}", sweep_device_get_sample_rate(device, &err));
-        check(err).unwrap();
-
-        println!("start scanning");
-        sweep_device_start_scanning(device, &err);
-        check(err).unwrap();
-
-        let scan = sweep_device_get_scan(device, &err);
-        check(err).unwrap();
-
-        let sample_count = sweep_scan_get_number_of_samples(scan);
-
-        for n in 0..sample_count {
-          let angle = sweep_scan_get_angle(scan, n);
-          let distance = sweep_scan_get_distance(scan, n);
-          let signal = sweep_scan_get_signal_strength(scan, n);
-          println!("Angle {}, Distance {}, Signal Strength: {}", angle, distance, signal);
-        }
-
-        println!("stop scanning");
-        sweep_device_stop_scanning(device, &err);
-        check(err).unwrap();
-
-        }
-    }
+//    #[test]
+//    fn ffi_calls_work() {
+//
+//        unsafe {
+//
+//        let err : *mut SweepError = std::ptr::null_mut();
+//
+//        let c = sweep_is_abi_compatible();
+//        println!("sweep_is_abi_compatible returned {:?}", c);
+//
+//        let v = sweep_get_version();
+//        println!("sweep_get_version returned {:?}", v);
+//
+//        println!("constructing device");
+//        let device = sweep_device_construct_simple(CString::new("/dev/ttyUSB0").unwrap().as_ptr(), &err);
+//        check(err).unwrap();
+//
+//        println!("Motor speed: {}", sweep_device_get_motor_speed(device, &err));
+//        check(err).unwrap();
+//
+//        println!("Sample rate: {}", sweep_device_get_sample_rate(device, &err));
+//        check(err).unwrap();
+//
+//        println!("start scanning");
+//        sweep_device_start_scanning(device, &err);
+//        check(err).unwrap();
+//
+//        let scan = sweep_device_get_scan(device, &err);
+//        check(err).unwrap();
+//
+//        let sample_count = sweep_scan_get_number_of_samples(scan);
+//
+//        for n in 0..sample_count {
+//          let angle = sweep_scan_get_angle(scan, n);
+//          let distance = sweep_scan_get_distance(scan, n);
+//          let signal = sweep_scan_get_signal_strength(scan, n);
+//          println!("Angle {}, Distance {}, Signal Strength: {}", angle, distance, signal);
+//        }
+//
+//        println!("stop scanning");
+//        sweep_device_stop_scanning(device, &err);
+//        check(err).unwrap();
+//
+//        }
+//    }
 }
