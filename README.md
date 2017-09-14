@@ -1,5 +1,9 @@
 # libsweep-rs
 
+[![Version](https://img.shields.io/crates/v/libsweep.svg)](https://crates.io/crates/libsweep)
+[![Docs](https://docs.rs/libsweep/badge.svg)](https://docs.rs/libsweep)
+
+
 This is a Rust wrapper for the Sweep SDK for interacting with the Scanse Sweep LIDAR unit.
 
 # Instructions
