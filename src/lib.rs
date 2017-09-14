@@ -36,7 +36,6 @@ fn get_error(err: *mut SweepError) -> String {
 
 fn check(error: *mut SweepError) -> Result<(), String> {
     if error.is_null() {
-        //println!("No error");
         Ok(())
     } else {
         Err(unsafe {
@@ -49,11 +48,17 @@ pub struct Sweep {
     device: *const SweepDevice
 }
 
+pub struct Point {
+    angle: i32,
+    distance: i32,
+    signal_strength: i32
+}
+
 impl Sweep {
     
     pub fn new(device: String) -> Result<Self, String> {
         unsafe {
-            let mut err : *mut SweepError = std::ptr::null_mut();
+            let err : *mut SweepError = std::ptr::null_mut();
             let device = sweep_device_construct_simple(CString::new(device).unwrap().as_ptr(), &err);
             if err.is_null() {
                 Ok(Sweep { device: device })
@@ -65,10 +70,46 @@ impl Sweep {
 
     pub fn start_scanning(&self) -> Result<(), String> {
         unsafe {
-            let mut err : *mut SweepError = std::ptr::null_mut();
+            let err : *mut SweepError = std::ptr::null_mut();
             sweep_device_start_scanning(self.device, &err);
             if err.is_null() {
                 Ok(())
+            } else {
+                Err(get_error(err))
+            }
+        }
+    }
+
+    pub fn stop_scanning(&self) -> Result<(), String> {
+        unsafe {
+            let err : *mut SweepError = std::ptr::null_mut();
+            sweep_device_stop_scanning(self.device, &err);
+            if err.is_null() {
+                Ok(())
+            } else {
+                Err(get_error(err))
+            }
+        }
+    }
+
+    pub fn scan(&self) -> Result<Vec<Point>, String> {
+        unsafe {
+            let err : *mut SweepError = std::ptr::null_mut();
+            let scan = sweep_device_get_scan(self.device, &err);
+            if err.is_null() {
+                let sample_count = sweep_scan_get_number_of_samples(scan);
+
+                let mut points: Vec<Point> = vec![];
+
+                for n in 0..sample_count {
+                    let angle = sweep_scan_get_angle(scan, n);
+                    let distance = sweep_scan_get_distance(scan, n);
+                    let signal_strength = sweep_scan_get_signal_strength(scan, n);
+                    //println!("Angle {}, Distance {}, Signal Strength: {}", angle, distance, signal_strength);
+                    points.push(Point { angle: angle, distance: distance, signal_strength: signal_strength });
+                }
+
+                Ok(points)
             } else {
                 Err(get_error(err))
             }
@@ -81,22 +122,21 @@ impl Sweep {
 mod tests {
 
     use super::*;
-/*
+
     #[test]
     fn rust_calls_work() {
-      let mut sweep = Sweep::new(String::from("/dev/ttyUSB0")).unwrap();
-      let data = sweep.scan();
-      for i in 0..data.len() {
-        println!("Angle {}, Distance {}, Signal Strength: {}", data[i].angle, data[i].distance, data[i].signal_strength);
-      }
+        let mut sweep = Sweep::new(String::from("/dev/ttyUSB0")).unwrap();
+        sweep.start_scanning().unwrap();
+        sweep.scan().unwrap();
+        sweep.stop_scanning().unwrap();
     }
-*/
+
     #[test]
     fn ffi_calls_work() {
 
         unsafe {
 
-        let mut err : *mut SweepError = std::ptr::null_mut();
+        let err : *mut SweepError = std::ptr::null_mut();
 
         let c = sweep_is_abi_compatible();
         println!("sweep_is_abi_compatible returned {:?}", c);
@@ -105,8 +145,7 @@ mod tests {
         println!("sweep_get_version returned {:?}", v);
 
         println!("constructing device");
-
-
+        let device = sweep_device_construct_simple(CString::new("/dev/ttyUSB0").unwrap().as_ptr(), &err);
         check(err).unwrap();
 
         println!("Motor speed: {}", sweep_device_get_motor_speed(device, &err));
