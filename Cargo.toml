@@ -1,7 +1,10 @@
 [package]
 name = "libsweep"
+description="Rust FFI wrapper for the Scanse Sweep LIDAR"
 version = "0.1.0"
-authors = ["pi"]
+license = "Apache-2.0"
+authors = ["andygrove73@gmail.com"]
+keywords = ["scanse","sweep","lidar"]
 
 [dependencies]
 libc = "0.2.0"
