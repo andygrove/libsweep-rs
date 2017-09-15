@@ -5,7 +5,7 @@ use std::ffi::{CStr, CString};
 use std::os::raw::c_char;
 
 #[repr(C)]
-struct SweepDevice;
+struct SweepDevice {}
 
 #[repr(C)]
 struct SweepError;
@@ -13,6 +13,7 @@ struct SweepError;
 #[repr(C)]
 struct SweepScan;
 
+#[allow(improper_ctypes)]
 #[link(name = "sweep")]
 extern {
     fn sweep_error_message(error: *const SweepError) -> *const c_char;
@@ -22,11 +23,9 @@ extern {
     fn sweep_device_start_scanning(device: *const SweepDevice, error: *const *mut SweepError);
     fn sweep_device_stop_scanning(device: *const SweepDevice, error: *const *mut SweepError);
     fn sweep_device_get_motor_ready(device: *const SweepDevice, error: *const *mut SweepError) -> bool;
-    /// Blocks until device is ready to adjust motor speed, then adjusts motor speed
     fn sweep_device_set_motor_speed(device: *const SweepDevice, hz: int32_t, error: *const *mut SweepError);
     fn sweep_device_get_motor_speed(device: *const SweepDevice, error: *const *mut SweepError) -> int32_t;
     fn sweep_device_get_sample_rate(device: *const SweepDevice, error: *const *mut SweepError) -> int32_t;
-
     fn sweep_device_get_scan(device: *const SweepDevice, error: *const *mut SweepError) -> *const SweepScan;
     fn sweep_scan_get_number_of_samples(scan: *const SweepScan) -> int32_t;
     fn sweep_scan_get_angle(scan: *const SweepScan, sample: int32_t) -> int32_t;
@@ -191,10 +190,10 @@ mod tests {
         println!("Sample rate: {}", sweep.get_sample_rate().unwrap());
         println!("Starting scan ...");
         sweep.start_scanning().unwrap();
-        let points = sweep.scan().unwrap();
-        for Sample in &points {
+        let scan = sweep.scan().unwrap();
+        for sample in &scan {
             println!("Angle {}, Distance {}, Signal Strength: {}",
-                     Sample.angle, Sample.distance, Sample.signal_strength);
+                     sample.angle, sample.distance, sample.signal_strength);
         }
         sweep.stop_scanning().unwrap();
     }
