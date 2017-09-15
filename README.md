@@ -10,10 +10,10 @@ This is a Rust wrapper for the Sweep SDK for interacting with the Scanse Sweep L
 let port = String::from("/dev/ttyUSB0");
 let sweep = Sweep::new(port).unwrap();
 sweep.start_scanning().unwrap();
-let points = sweep.scan().unwrap();
-for point in &points {
+let scan = sweep.scan().unwrap();
+for sample in &scan {
     println!("Angle {}, Distance {}, Signal Strength: {}",
-        point.angle, point.distance, point.signal_strength);
+        sample.angle, sample.distance, sample.signal_strength);
 }
 sweep.stop_scanning().unwrap();
 ```
