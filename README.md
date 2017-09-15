@@ -5,8 +5,9 @@
 
 This is a Rust wrapper for the Sweep SDK for interacting with the Scanse Sweep LIDAR unit.
 
+# Usage
 ```rust
-let port = String::from("/dev/tty.usbserial-DM00KC6Z");
+let port = String::from("/dev/ttyUSB0");
 let sweep = Sweep::new(port).unwrap();
 sweep.start_scanning().unwrap();
 let points = sweep.scan().unwrap();
@@ -19,29 +20,26 @@ sweep.stop_scanning().unwrap();
 
 # Instructions
 
-- Clone the repo at https://github.com/scanse/sweep-sdk and follow build instructions
-- Build this crate with `cargo build`
-- For now, modify the source code with the correct path to the lidar unit ... test is hardcoded to /dev/ttyUSB0
-- Connect the Sweep unit and run `cargo test --nocapture` to see measurements
+This crate relies on the Sweep SDK (https://github.com/scanse/sweep-sdk) being installed.
+ 
+Connect the LIDAR unit and find out which port it is using. On Raspberry Pi it is likely `/dev/ttyUSB0` or similar. On Mac it is likely somthing like `/dev/tty.usbserial-DM00KC6Z`.
+
+Run the example using this syntax, passing the port as a command-line parameter.
+
+```bash
+cargo run --example scan /dev/ttyUSB0
+```
 
 You should see output like:
 
 ```
-sweep_is_abi_compatible returned true
-sweep_get_version returned 65538
-constructing device
+Version 1.2
+ABI compatible: true
 Motor speed: 5
 Sample rate: 500
-start scanning
-Angle 202062, Distance 23, Signal Strength: 199
-Angle 204625, Distance 24, Signal Strength: 191
-Angle 208125, Distance 22, Signal Strength: 175
-Angle 220375, Distance 650, Signal Strength: 167
-Angle 222937, Distance 380, Signal Strength: 191
-Angle 225125, Distance 373, Signal Strength: 199
-stop scanning
-test tests::ffi_calls_work ... ok
+Starting scan ...
+Angle 349375, Distance 67, Signal Strength: 191
+Angle 352125, Distance 44, Signal Strength: 191
+Angle 354687, Distance 40, Signal Strength: 191
+Angle 357437, Distance 40, Signal Strength: 199
 ```
-
-
-

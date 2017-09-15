@@ -1,11 +1,19 @@
+use std::env;
+
 extern crate libsweep;
 use libsweep::*;
 
 
 fn main() {
-    // the serial port varies depending on your operating system and environment
-    //let port = String::from("/dev/tty.usbserial-DM00KC6Z");
-    let port = String::from("/dev/ttyUSB0");
+
+    match env::args().nth(1) {
+      Some(port) => scan(port),
+      None => println!("Serial port must be specified as command-line argument e.g. /dev/ttyUSB0")
+    }
+
+}
+
+fn scan(port: String) {
 
     let version = Sweep::get_version();
     println!("Version {}.{}", version >> 16, version & 0x0F);
