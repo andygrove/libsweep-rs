@@ -3,8 +3,19 @@
 [![Version](https://img.shields.io/crates/v/libsweep.svg)](https://crates.io/crates/libsweep)
 [![Docs](https://docs.rs/libsweep/badge.svg)](https://docs.rs/libsweep)
 
-
 This is a Rust wrapper for the Sweep SDK for interacting with the Scanse Sweep LIDAR unit.
+
+```rust
+let port = String::from("/dev/tty.usbserial-DM00KC6Z");
+let sweep = Sweep::new(port).unwrap();
+sweep.start_scanning().unwrap();
+let points = sweep.scan().unwrap();
+for point in &points {
+    println!("Angle {}, Distance {}, Signal Strength: {}",
+        point.angle, point.distance, point.signal_strength);
+}
+sweep.stop_scanning().unwrap();
+```
 
 # Instructions
 
