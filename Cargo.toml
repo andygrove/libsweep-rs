@@ -1,5 +1,5 @@
 [package]
-name = "sweep"
+name = "libsweep"
 description="Rust library for the Scanse Sweep LIDAR module"
 version = "1.0.1"
 license = "Apache-2.0"
