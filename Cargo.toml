@@ -1,7 +1,7 @@
 [package]
-name = "libsweep"
+name = "sweep"
 description="Rust library for the Scanse Sweep LIDAR module"
-version = "1.0.0"
+version = "1.0.1"
 license = "Apache-2.0"
 authors = ["andygrove73@gmail.com"]
 keywords = ["scanse","sweep","LIDAR"]
